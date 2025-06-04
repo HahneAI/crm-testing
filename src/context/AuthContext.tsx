@@ -43,6 +43,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     import.meta.env.VITE_SUPABASE_URL !== 'your-supabase-project-url';
 
   useEffect(() => {
+    console.log('AuthContext Debug:', { 
+      supabaseConfigured, 
+      timestamp: new Date().toISOString() 
+    });
+    
     // Mock auth for development when Supabase isn't configured
     if (!supabaseConfigured) {
       // Simulate a brief loading state
@@ -61,6 +66,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const checkSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
+        
+        console.log('Session check result:', { session: session?.user?.id, error });
         
         if (error) throw error;
         
