@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
 import { User, Session, AuthError } from '@supabase/supabase-js';
 import { getSupabase } from '../services/supabase';
 import { UserProfile } from '../types/user';
@@ -36,11 +36,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Check if Supabase is configured
-  const supabaseConfigured = 
+  // Check if Supabase is configured - using useMemo to prevent recalculation on every render
+  const supabaseConfigured = useMemo(() => 
     import.meta.env.VITE_SUPABASE_URL &&
     import.meta.env.VITE_SUPABASE_ANON_KEY &&
-    import.meta.env.VITE_SUPABASE_URL !== 'your-supabase-project-url';
+    import.meta.env.VITE_SUPABASE_URL !== 'your-supabase-project-url',
+  []);
 
   useEffect(() => {
     console.log('🔍 AuthContext useEffect started');
