@@ -115,20 +115,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     try {
       const supabase = getSupabase();
-      const { data, error } = await supabase
+      
+      // Check if user profile exists
+      const { data: existingUser, error: fetchError } = await supabase
         .from('users')
         .select('*')
         .eq('id', userId)
         .single();
       
-      if (error) {
-        throw error;
+      if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 is the error for no rows returned
+        throw fetchError;
       }
       
-      setUserProfile(data);
-      setIsAdmin(data.role === 'admin');
+      // If user doesn't exist in our custom users table, create profile
+      if (!existingUser) {
+        console.log('User profile not found, creating new profile for:', userId);
+        
+        // Get user details from auth
+        const { data: authUser } = await supabase.auth.getUser(userId);
+        
+        if (authUser?.user) {
+          const { data: newUser, error: insertError } = await supabase
+            .from('users')
+            .insert({
+              id: userId,
+              email: authUser.user.email || '',
+              full_name: authUser.user.user_metadata?.full_name || '',
+              role: 'admin' // Default role
+            })
+            .select()
+            .single();
+          
+          if (insertError) {
+            throw insertError;
+          }
+          
+          setUserProfile(newUser);
+          setIsAdmin(newUser.role === 'admin');
+          return;
+        }
+      } else {
+        // User exists, set profile
+        setUserProfile(existingUser);
+        setIsAdmin(existingUser.role === 'admin');
+      }
     } catch (error) {
-      console.error('Error fetching user profile:', error);
+      console.error('Error fetching/creating user profile:', error);
       setUserProfile(null);
       setIsAdmin(false);
     }
