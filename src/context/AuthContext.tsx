@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useMemo, useRef } from 'react';
 import { User, Session, AuthError } from '@supabase/supabase-js';
 import { getSupabase } from '../services/supabase';
 import { UserProfile } from '../types/user';
@@ -35,6 +35,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  
+  // Prevent multiple concurrent auth checks
+  const authCheckInProgress = useRef(false);
+  const initialized = useRef(false);
 
   // Check if Supabase is configured - using useMemo to prevent recalculation on every render
   const supabaseConfigured = useMemo(() => 
@@ -42,67 +46,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     import.meta.env.VITE_SUPABASE_ANON_KEY &&
     import.meta.env.VITE_SUPABASE_URL !== 'your-supabase-project-url',
   []);
-
-  useEffect(() => {
-    // Mock auth for development when Supabase isn't configured
-    if (!supabaseConfigured) {
-      // Simulate a brief loading state
-      setTimeout(() => {
-        setUser({ id: mockUserProfile.id } as User);
-        setUserProfile(mockUserProfile);
-        setIsAdmin(mockUserProfile.role === 'admin');
-        setLoading(false);
-      }, 1000);
-      return;
-    }
-
-    // Real Supabase auth logic when configured
-    const supabase = getSupabase();
-    
-    const checkSession = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) throw error;
-        
-        setSession(session);
-        setUser(session?.user || null);
-        
-        if (session?.user) {
-          await fetchUserProfile(session.user.id);
-        }
-      } catch (error) {
-        console.error('Error checking session:', error);
-        // Fall back to mock data on any error
-        setUser({ id: mockUserProfile.id } as User);
-        setUserProfile(mockUserProfile);
-        setIsAdmin(mockUserProfile.role === 'admin');
-      } finally {
-        console.log('🎯 About to set loading to FALSE - userProfile:', !!userProfile, 'isAdmin:', isAdmin);
-        setLoading(false);
-      }
-    };
-
-    checkSession();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setSession(session);
-      setUser(session?.user || null);
-      
-      if (session?.user) {
-        await fetchUserProfile(session.user.id);
-      } else {
-        setUserProfile(null);
-        setIsAdmin(false);
-      }
-      
-      setLoading(false);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [supabaseConfigured]);
 
   const fetchUserProfile = async (userId: string) => {
     try {
@@ -166,6 +109,91 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsAdmin(true);
     }
   };
+
+  useEffect(() => {
+    // Prevent multiple initialization attempts
+    if (initialized.current) return;
+    initialized.current = true;
+
+    const initializeAuth = async () => {
+      // Prevent multiple concurrent auth checks
+      if (authCheckInProgress.current) return;
+      authCheckInProgress.current = true;
+
+      try {
+        // Mock auth for development when Supabase isn't configured
+        if (!supabaseConfigured) {
+          // Simulate a brief loading state
+          setTimeout(() => {
+            setUser({ id: mockUserProfile.id } as User);
+            setUserProfile(mockUserProfile);
+            setIsAdmin(mockUserProfile.role === 'admin');
+            setLoading(false);
+            authCheckInProgress.current = false;
+          }, 1000);
+          return;
+        }
+
+        // Real Supabase auth logic when configured
+        const supabase = getSupabase();
+        
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) throw error;
+        
+        setSession(session);
+        setUser(session?.user || null);
+        
+        if (session?.user) {
+          await fetchUserProfile(session.user.id);
+        }
+        
+        // Set up auth state change listener
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+          // Only handle actual auth changes, not initial session
+          if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
+            setSession(session);
+            setUser(session?.user || null);
+            
+            if (session?.user) {
+              await fetchUserProfile(session.user.id);
+            } else {
+              setUserProfile(null);
+              setIsAdmin(false);
+            }
+          }
+        });
+
+        // Cleanup function
+        return () => {
+          subscription.unsubscribe();
+        };
+        
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+        // Fall back to mock data on any error
+        setUser({ id: mockUserProfile.id } as User);
+        setUserProfile(mockUserProfile);
+        setIsAdmin(mockUserProfile.role === 'admin');
+      } finally {
+        setLoading(false);
+        authCheckInProgress.current = false;
+      }
+    };
+
+    const cleanup = initializeAuth();
+    
+    // Return cleanup function
+    return () => {
+      if (cleanup && typeof cleanup.then === 'function') {
+        cleanup.then(cleanupFn => {
+          if (cleanupFn && typeof cleanupFn === 'function') {
+            cleanupFn();
+          }
+        });
+      }
+    };
+  }, [supabaseConfigured]);
 
   const signIn = async (email: string, password: string) => {
     if (!supabaseConfigured) {
