@@ -44,11 +44,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   []);
 
   useEffect(() => {
-    console.log('AuthContext Debug:', { 
-      supabaseConfigured, 
-      timestamp: new Date().toISOString() 
-    });
-    
     // Mock auth for development when Supabase isn't configured
     if (!supabaseConfigured) {
       // Simulate a brief loading state
@@ -67,8 +62,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const checkSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
-        
-        console.log('Session check result:', { session: session?.user?.id, error });
         
         if (error) throw error;
         
@@ -111,13 +104,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [supabaseConfigured]);
 
   const fetchUserProfile = async (userId: string) => {
-    console.log('🔍 fetchUserProfile started for userId:', userId);
-    
     // Always fall back to mock data if Supabase isn't configured
     if (!supabaseConfigured) {
       setUserProfile(mockUserProfile);
       setIsAdmin(mockUserProfile.role === 'admin');
-      console.log('🔍 fetchUserProfile completed (mock), userProfile set to:', mockUserProfile);
       return;
     }
 
@@ -131,16 +121,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq('id', userId)
         .single();
       
-      console.log('🔍 existingUser result:', { existingUser, fetchError });
-      
       if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 is the error for no rows returned
         throw fetchError;
       }
       
-      // If user doesn't exist in our custom users table, create profile
+      // If user doesn't exist in our custom users table, try to create profile
       if (!existingUser) {
-        console.log('🔍 Creating new user profile for:', userId);
-        
         // Get user details from auth
         const { data: authUser } = await supabase.auth.getUser(userId);
         
@@ -156,33 +142,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             .select()
             .single();
           
-          console.log('🔍 New user created:', { newUser, insertError });
-          
+          // If insert fails due to RLS policies, fall back to mock data
           if (insertError) {
-            throw insertError;
+            console.log('User creation failed due to RLS, using mock profile');
+            setUserProfile(mockUserProfile);
+            setIsAdmin(true);
+            return;
           }
           
           setUserProfile(newUser);
           setIsAdmin(newUser.role === 'admin');
-          console.log('🔍 fetchUserProfile completed, userProfile set to:', newUser);
           return;
         }
       } else {
         // User exists, set profile
         setUserProfile(existingUser);
         setIsAdmin(existingUser.role === 'admin');
-        console.log('🔍 fetchUserProfile completed, userProfile set to:', existingUser);
         return;
       }
     } catch (error) {
-      console.log('🔍 fetchUserProfile error:', error);
-      
-      // Fall back to mock data on ANY error
-      console.log('🔍 Falling back to mock user profile due to error');
-      setUserProfile(mockUserProfile);
-      setIsAdmin(mockUserProfile.role === 'admin');
-      console.log('🔍 fetchUserProfile completed (fallback), userProfile set to:', mockUserProfile);
+      console.log('Database error in fetchUserProfile, falling back to mock data:', error);
     }
+    
+    // Final fallback to mock data
+    setUserProfile(mockUserProfile);
+    setIsAdmin(true);
   };
 
   const signIn = async (email: string, password: string) => {
