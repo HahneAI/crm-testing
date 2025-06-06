@@ -78,6 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUserProfile(mockUserProfile);
         setIsAdmin(mockUserProfile.role === 'admin');
       } finally {
+        console.log('🎯 About to set loading to FALSE - userProfile:', !!userProfile, 'isAdmin:', isAdmin);
         setLoading(false);
       }
     };
@@ -104,14 +105,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [supabaseConfigured]);
 
   const fetchUserProfile = async (userId: string) => {
-    // Always fall back to mock data if Supabase isn't configured
-    if (!supabaseConfigured) {
-      setUserProfile(mockUserProfile);
-      setIsAdmin(mockUserProfile.role === 'admin');
-      return;
-    }
-
     try {
+      // Always fall back to mock data if Supabase isn't configured
+      if (!supabaseConfigured) {
+        setUserProfile(mockUserProfile);
+        setIsAdmin(mockUserProfile.role === 'admin');
+        return;
+      }
+
       const supabase = getSupabase();
       
       // Check if user profile exists
@@ -144,7 +145,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           
           // If insert fails due to RLS policies, fall back to mock data
           if (insertError) {
-            console.log('User creation failed due to RLS, using mock profile');
             setUserProfile(mockUserProfile);
             setIsAdmin(true);
             return;
@@ -161,12 +161,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
     } catch (error) {
-      console.log('Database error in fetchUserProfile, falling back to mock data:', error);
+      // Final fallback to mock data on any error
+      setUserProfile(mockUserProfile);
+      setIsAdmin(true);
     }
-    
-    // Final fallback to mock data
-    setUserProfile(mockUserProfile);
-    setIsAdmin(true);
   };
 
   const signIn = async (email: string, password: string) => {

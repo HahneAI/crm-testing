@@ -19,6 +19,7 @@ import LoadingScreen from './components/common/LoadingScreen';
 
 function App() {
   const { user, loading } = useAuth();
+  console.log('🎯 APP RENDER - loading:', loading, 'user:', !!user, 'userProfile:', !!user);
 
   useEffect(() => {
     // Set app title
