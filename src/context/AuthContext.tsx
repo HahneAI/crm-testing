@@ -107,10 +107,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [supabaseConfigured]);
 
   const fetchUserProfile = async (userId: string) => {
+    console.log('🔍 fetchUserProfile started for userId:', userId);
+    
     if (!supabaseConfigured) {
       // Use mock data
       setUserProfile(mockUserProfile);
       setIsAdmin(mockUserProfile.role === 'admin');
+      console.log('🔍 fetchUserProfile completed, userProfile set to:', mockUserProfile);
       return;
     }
 
@@ -124,13 +127,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq('id', userId)
         .single();
       
+      console.log('🔍 existingUser result:', { existingUser, fetchError });
+      
       if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 is the error for no rows returned
         throw fetchError;
       }
       
       // If user doesn't exist in our custom users table, create profile
       if (!existingUser) {
-        console.log('User profile not found, creating new profile for:', userId);
+        console.log('🔍 Creating new user profile for:', userId);
         
         // Get user details from auth
         const { data: authUser } = await supabase.auth.getUser(userId);
@@ -147,23 +152,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             .select()
             .single();
           
+          console.log('🔍 New user created:', { newUser, insertError });
+          
           if (insertError) {
             throw insertError;
           }
           
           setUserProfile(newUser);
           setIsAdmin(newUser.role === 'admin');
+          console.log('🔍 fetchUserProfile completed, userProfile set to:', newUser);
           return;
         }
       } else {
         // User exists, set profile
         setUserProfile(existingUser);
         setIsAdmin(existingUser.role === 'admin');
+        console.log('🔍 fetchUserProfile completed, userProfile set to:', existingUser);
       }
     } catch (error) {
-      console.error('Error fetching/creating user profile:', error);
+      console.log('🔍 fetchUserProfile error:', error);
       setUserProfile(null);
       setIsAdmin(false);
+      console.log('🔍 fetchUserProfile completed, userProfile set to:', null);
     }
   };
 
