@@ -19,7 +19,7 @@ const AdminRoute = ({ children }: AdminRouteProps) => {
 
   if (!user) {
     console.log('🔍 AdminRoute - No user, redirecting to login');
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login\" replace />;
   }
 
   if (!isAdmin) {
