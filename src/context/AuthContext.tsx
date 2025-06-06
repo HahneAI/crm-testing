@@ -44,7 +44,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   []);
 
   useEffect(() => {
-    console.log('🔍 AuthContext useEffect started');
     console.log('AuthContext Debug:', { 
       supabaseConfigured, 
       timestamp: new Date().toISOString() 
@@ -66,12 +65,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const supabase = getSupabase();
     
     const checkSession = async () => {
-      console.log('🔍 checkSession started');
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         
         console.log('Session check result:', { session: session?.user?.id, error });
-        console.log('🔍 getSession result:', { hasSession: !!session, userId: session?.user?.id, error });
         
         if (error) throw error;
         
@@ -84,16 +81,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch (error) {
         console.error('Error checking session:', error);
       } finally {
-        console.log('🔍 About to set loading to false in checkSession');
         setLoading(false);
       }
     };
 
-    console.log('🔍 About to call checkSession');
     checkSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('🔍 onAuthStateChange triggered:', { event, hasSession: !!session });
       setSession(session);
       setUser(session?.user || null);
       
@@ -104,7 +98,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsAdmin(false);
       }
       
-      console.log('🔍 About to set loading to false in onAuthStateChange');
       setLoading(false);
     });
 

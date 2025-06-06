@@ -1,7 +1,7 @@
 import { AlertCircle } from 'lucide-react';
 
 const LoadingScreen = () => {
-  console.log('🔍 LoadingScreen - Rendering loading screen');
+  console.log('LOADING_SCREEN rendered by:', new Error().stack?.split('\n')[1]);
   
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col items-center justify-center text-gray-900 dark:text-gray-100">
