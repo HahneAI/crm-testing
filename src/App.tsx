@@ -32,8 +32,8 @@ function App() {
   return (
     <Routes>
       {/* Auth Routes */}
-      <Route path="/login" element={!user ? <Login /> : <Navigate to="/dashboard" replace />} />
-      <Route path="/register" element={!user ? <Register /> : <Navigate to="/dashboard" replace />} />
+      <Route path="/login" element={!user ? <Login /> : <Navigate to="/dashboard\" replace />} />
+      <Route path="/register" element={!user ? <Register /> : <Navigate to="/dashboard\" replace />} />
       
       {/* Protected Dashboard Routes */}
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
