@@ -1,6 +1,8 @@
 import { AlertCircle } from 'lucide-react';
 
 const LoadingScreen = () => {
+  console.log('🔍 LoadingScreen - Rendering loading screen');
+  
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col items-center justify-center text-gray-900 dark:text-gray-100">
       <div className="flex flex-col items-center gap-4">

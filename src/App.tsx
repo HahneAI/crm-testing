@@ -25,9 +25,14 @@ function App() {
     document.title = 'FieldSync - Field Service Management';
   }, []);
 
+  console.log('🔍 App.tsx - loading:', loading, 'user:', !!user);
+
   if (loading) {
+    console.log('🔍 App.tsx - Showing LoadingScreen');
     return <LoadingScreen />;
   }
+
+  console.log('🔍 App.tsx - Past loading check, rendering routes');
 
   return (
     <Routes>
