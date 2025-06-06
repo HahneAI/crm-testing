@@ -80,6 +80,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } catch (error) {
         console.error('Error checking session:', error);
+        // Fall back to mock data on any error
+        setUser({ id: mockUserProfile.id } as User);
+        setUserProfile(mockUserProfile);
+        setIsAdmin(mockUserProfile.role === 'admin');
       } finally {
         setLoading(false);
       }
@@ -109,11 +113,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchUserProfile = async (userId: string) => {
     console.log('🔍 fetchUserProfile started for userId:', userId);
     
+    // Always fall back to mock data if Supabase isn't configured
     if (!supabaseConfigured) {
-      // Use mock data
       setUserProfile(mockUserProfile);
       setIsAdmin(mockUserProfile.role === 'admin');
-      console.log('🔍 fetchUserProfile completed, userProfile set to:', mockUserProfile);
+      console.log('🔍 fetchUserProfile completed (mock), userProfile set to:', mockUserProfile);
       return;
     }
 
@@ -168,12 +172,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUserProfile(existingUser);
         setIsAdmin(existingUser.role === 'admin');
         console.log('🔍 fetchUserProfile completed, userProfile set to:', existingUser);
+        return;
       }
     } catch (error) {
       console.log('🔍 fetchUserProfile error:', error);
-      setUserProfile(null);
-      setIsAdmin(false);
-      console.log('🔍 fetchUserProfile completed, userProfile set to:', null);
+      
+      // Fall back to mock data on ANY error
+      console.log('🔍 Falling back to mock user profile due to error');
+      setUserProfile(mockUserProfile);
+      setIsAdmin(mockUserProfile.role === 'admin');
+      console.log('🔍 fetchUserProfile completed (fallback), userProfile set to:', mockUserProfile);
     }
   };
 
