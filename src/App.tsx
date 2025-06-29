@@ -37,10 +37,11 @@ function App() {
       <Route path="/register" element={<Navigate to="/dashboard" replace />} />
       
       {/* Protected Dashboard Routes */}
-      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-      <Route path="/jobs" element={<ProtectedRoute><Jobs /></ProtectedRoute>} />
-      <Route path="/labor" element={<ProtectedRoute><Labor /></ProtectedRoute>} />
-      <Route path="/materials" element={<ProtectedRoute><Materials /></ProtectedRoute>} />
+    <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+    <Route path="/jobs" element={<ProtectedRoute><Jobs /></ProtectedRoute>} />
+    <Route path="/quotes" element={<ProtectedRoute><Quotes /></ProtectedRoute>} />  {/* ADD THIS LINE HERE */}
+    <Route path="/labor" element={<ProtectedRoute><Labor /></ProtectedRoute>} />
+    <Route path="/materials" element={<ProtectedRoute><Materials /></ProtectedRoute>} />
       
       {/* Admin Only Routes */}
       <Route path="/employees" element={<AdminRoute><Employees /></AdminRoute>} />
