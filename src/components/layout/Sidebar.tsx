@@ -43,14 +43,14 @@ const Sidebar = () => {
     }`;
   
   const menuItems = [
-    { path: '/dashboard', name: 'Dashboard', icon: <LayoutDashboard size={20} /> },
-    { path: '/jobs', name: 'Jobs', icon: <Briefcase size={20} /> },
-    { path: '/labor', name: 'Labor Hours', icon: <Clock size={20} /> },
-    { path: '/materials', name: 'Materials', icon: <Package size={20} /> },
-    { path: '/employees', name: 'Employees', icon: <Users size={20} />, adminOnly: true },
-    { path: '/companies', name: 'Companies', icon: <Building2 size={20} />, adminOnly: true },
-    { path: '/settings', name: 'Settings', icon: <Settings size={20} /> },
-  ];
+  { path: '/dashboard', name: 'Dashboard', icon: <LayoutDashboard size={20} /> },
+  { path: '/jobs', name: 'Jobs', icon: <Briefcase size={20} /> },
+  { path: '/quotes', name: 'Quote Engine', icon: <Calculator size={20} /> }, // NEW
+  { path: '/labor', name: 'Labor Hours', icon: <Clock size={20} /> },
+  { path: '/materials', name: 'Materials', icon: <Package size={20} /> },
+  { path: '/employees', name: 'Employees', icon: <Users size={20} />, adminOnly: true },
+  { path: '/companies', name: 'Companies', icon: <Building2 size={20} />, adminOnly: true },
+  { path: '/settings', name: 'Settings', icon: <Settings size={20} /> },
   
   const filteredMenuItems = menuItems.filter(item => !item.adminOnly || isAdmin);
   
