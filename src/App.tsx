@@ -20,16 +20,16 @@ import Quotes from './pages/dashboard/Quotes';
 
 function App() {
   const { user, loading } = useAuth();
-
+  
   useEffect(() => {
     // Set app title
     document.title = 'FieldSync - Field Service Management';
   }, []);
-
+  
   if (loading) {
     return <LoadingScreen />;
   }
-
+  
   return (
     <Routes>
       {/* Auth Routes - Always redirect to dashboard */}
@@ -37,11 +37,11 @@ function App() {
       <Route path="/register" element={<Navigate to="/dashboard" replace />} />
       
       {/* Protected Dashboard Routes */}
-    <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-    <Route path="/jobs" element={<ProtectedRoute><Jobs /></ProtectedRoute>} />
-    <Route path="/quotes" element={<ProtectedRoute><Quotes /></ProtectedRoute>} />  {/* ADD THIS LINE HERE */}
-    <Route path="/labor" element={<ProtectedRoute><Labor /></ProtectedRoute>} />
-    <Route path="/materials" element={<ProtectedRoute><Materials /></ProtectedRoute>} />
+      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/jobs" element={<ProtectedRoute><Jobs /></ProtectedRoute>} />
+      <Route path="/quotes" element={<ProtectedRoute><Quotes /></ProtectedRoute>} />
+      <Route path="/labor" element={<ProtectedRoute><Labor /></ProtectedRoute>} />
+      <Route path="/materials" element={<ProtectedRoute><Materials /></ProtectedRoute>} />
       
       {/* Admin Only Routes */}
       <Route path="/employees" element={<AdminRoute><Employees /></AdminRoute>} />
