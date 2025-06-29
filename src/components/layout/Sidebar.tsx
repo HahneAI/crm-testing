@@ -42,7 +42,7 @@ const Sidebar = () => {
         : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
     }`;
   
-  const menuItems = [
+const menuItems = [
   { path: '/dashboard', name: 'Dashboard', icon: <LayoutDashboard size={20} /> },
   { path: '/jobs', name: 'Jobs', icon: <Briefcase size={20} /> },
   { path: '/quotes', name: 'Quote Engine', icon: <Calculator size={20} /> }, // NEW
@@ -51,6 +51,8 @@ const Sidebar = () => {
   { path: '/employees', name: 'Employees', icon: <Users size={20} />, adminOnly: true },
   { path: '/companies', name: 'Companies', icon: <Building2 size={20} />, adminOnly: true },
   { path: '/settings', name: 'Settings', icon: <Settings size={20} /> },
+];
+
   
   const filteredMenuItems = menuItems.filter(item => !item.adminOnly || isAdmin);
   
