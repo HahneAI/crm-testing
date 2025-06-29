@@ -16,6 +16,7 @@ import MobileJobView from './pages/mobile/JobView.tsx';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import AdminRoute from './components/auth/AdminRoute';
 import LoadingScreen from './components/common/LoadingScreen';
+import Quotes from './pages/dashboard/Quotes';
 
 function App() {
   const { user, loading } = useAuth();
