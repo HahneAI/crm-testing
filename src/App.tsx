@@ -31,9 +31,9 @@ function App() {
 
   return (
     <Routes>
-      {/* Auth Routes */}
-      <Route path="/login" element={!user ? <Login /> : <Navigate to="/dashboard\" replace />} />
-      <Route path="/register" element={!user ? <Register /> : <Navigate to="/dashboard\" replace />} />
+      {/* Auth Routes - Always redirect to dashboard */}
+      <Route path="/login" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/register" element={<Navigate to="/dashboard" replace />} />
       
       {/* Protected Dashboard Routes */}
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
@@ -50,8 +50,8 @@ function App() {
       <Route path="/mobile/time-entry" element={<ProtectedRoute><MobileTimeEntry /></ProtectedRoute>} />
       <Route path="/mobile/job/:id" element={<ProtectedRoute><MobileJobView /></ProtectedRoute>} />
       
-      {/* Default Routes */}
-      <Route path="/" element={<Navigate to={user ? "/dashboard" : "/login"} replace />} />
+      {/* Default Routes - Always redirect to dashboard */}
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
