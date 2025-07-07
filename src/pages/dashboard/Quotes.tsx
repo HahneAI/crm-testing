@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Send, MessageCircle, Loader2 } from 'lucide-react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
-import Card from '../../components/ui/Card';
 
 interface Message {
   id: string;
@@ -112,7 +111,7 @@ const Quotes = () => {
           </h1>
         </div>
 
-        <Card className="h-[600px] flex flex-col">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow h-[600px] flex flex-col">
           {/* Chat Messages Area */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {messages.map((message) => (
@@ -171,7 +170,7 @@ const Quotes = () => {
               Connected to Make.com AI Quote Engine | Tech ID: 22222222-2222-2222-2222-222222222222
             </p>
           </div>
-        </Card>
+        </div>
       </div>
     </DashboardLayout>
   );
