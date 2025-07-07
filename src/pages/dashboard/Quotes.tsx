@@ -30,7 +30,7 @@ const Quotes = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   // Replace with your actual Make.com webhook URL
-  const MAKE_WEBHOOK_URL = 'YOUR_WEBHOOK_URL_HERE';
+  const MAKE_WEBHOOK_URL = 'https://hook.us1.make.com/rb5gufndgl01tauq71txny9pswtovpy5';
   const LOCAL_API_URL = `/api/chat-messages/${sessionIdRef.current}`;
 
   // Send user message to Make.com
