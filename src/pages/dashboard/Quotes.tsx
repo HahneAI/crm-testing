@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Send, MessageCircle, Loader2 } from 'lucide-react';
+import { Send, MessageCircle, Loader2, Bot } from 'lucide-react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 
 interface Message {
@@ -44,8 +44,8 @@ const Quotes = () => {
         throw new Error('Failed to send to Make.com');
       }
 
-      const result = await response.json();
-      return result;
+      // Just return success - we'll handle the AI response separately
+      return { status: 'sent' };
     } catch (error) {
       console.error('Error sending to Make.com:', error);
       throw error;
@@ -68,20 +68,13 @@ const Quotes = () => {
     setIsLoading(true);
 
     try {
-      // Send to Make.com
-      const makeResponse = await sendToMake(inputText);
+      // Send to Make.com (no immediate AI response)
+      await sendToMake(inputText);
       
-      // Add AI response (you might get this back from Make.com or handle it separately)
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: makeResponse.response || "Message sent to quote engine successfully! Processing your request...",
-        sender: 'ai',
-        timestamp: new Date()
-      };
-
-      setMessages(prev => [...prev, aiMessage]);
+      // Keep loading state - AI will respond via separate endpoint
+      
     } catch (error) {
-      // Add error message
+      // Add error message and stop loading
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         text: "Sorry, there was an error connecting to the quote engine. Please try again.",
@@ -89,7 +82,6 @@ const Quotes = () => {
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
-    } finally {
       setIsLoading(false);
     }
   };
@@ -134,13 +126,23 @@ const Quotes = () => {
               </div>
             ))}
             
+            {/* Enhanced AI Thinking State */}
             {isLoading && (
               <div className="flex justify-start">
-                <div className="bg-gray-100 dark:bg-gray-700 px-4 py-2 rounded-lg flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span className="text-sm text-gray-600 dark:text-gray-300">
-                    Processing...
-                  </span>
+                <div className="bg-gray-100 dark:bg-gray-700 px-4 py-3 rounded-lg flex items-center gap-3">
+                  <Bot className="h-5 w-5 text-primary-600" />
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin text-primary-600" />
+                    <span className="text-sm text-gray-600 dark:text-gray-300">
+                      AI is analyzing your request...
+                    </span>
+                  </div>
+                  {/* Animated dots */}
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-primary-600 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-primary-600 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                    <div className="w-2 h-2 bg-primary-600 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                  </div>
                 </div>
               </div>
             )}
