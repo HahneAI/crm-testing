@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Send, MessageCircle, Loader2, Bot } from 'lucide-react';
+import { v4 as uuidv4 } from 'uuid';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 
 interface Message {
@@ -7,24 +8,33 @@ interface Message {
   text: string;
   sender: 'user' | 'ai';
   timestamp: Date;
+  sessionId?: string;
 }
 
 const Quotes = () => {
+  // Generate a unique session ID that persists for this chat session
+  const sessionIdRef = useRef<string>(`quote_session_${Date.now()}`);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const lastPollTimeRef = useRef<Date>(new Date());
+
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
       text: "Hello! I'm your AI Quote Engine assistant. I can help you create accurate quotes for landscaping jobs. What project would you like to quote today?",
       sender: 'ai',
-      timestamp: new Date()
+      timestamp: new Date(),
+      sessionId: sessionIdRef.current
     }
   ]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Replace this URL with your actual Make.com scenario webhook URL
-  const MAKE_WEBHOOK_URL = 'https://hook.us1.make.com/rb5gufndgl01tauq71txny9pswtovpy5';
+  // Replace with your actual Make.com webhook URL
+  const MAKE_WEBHOOK_URL = 'YOUR_WEBHOOK_URL_HERE';
+  const LOCAL_API_URL = `/api/chat-messages/${sessionIdRef.current}`;
 
-  const sendToMake = async (userMessage: string) => {
+  // Send user message to Make.com
+  const sendUserMessageToMake = async (userMessageText: string) => {
     try {
       const response = await fetch(MAKE_WEBHOOK_URL, {
         method: 'POST',
@@ -32,57 +42,96 @@ const Quotes = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          message: userMessage,
+          message: userMessageText,
           timestamp: new Date().toISOString(),
-          sessionId: 'quote_session_' + Date.now(),
+          sessionId: sessionIdRef.current,
           source: 'quote_engine',
           techId: '22222222-2222-2222-2222-222222222222'
         })
       });
 
       if (!response.ok) {
-        throw new Error('Failed to send to Make.com');
+        throw new Error('Failed to send message to Make.com');
       }
-
-      // Just return success - we'll handle the AI response separately
-      return { status: 'sent' };
+      
+      console.log('✅ User message sent to Make.com successfully');
     } catch (error) {
-      console.error('Error sending to Make.com:', error);
+      console.error('❌ Error sending user message to Make.com:', error);
       throw error;
     }
   };
 
+  // Poll for new AI messages
+  const pollForAiMessages = async () => {
+    try {
+      const response = await fetch(`${LOCAL_API_URL}?since=${lastPollTimeRef.current.toISOString()}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch AI messages');
+      }
+
+      const newAiMessages: Message[] = await response.json();
+      
+      if (newAiMessages.length > 0) {
+        console.log(`📨 Received ${newAiMessages.length} new AI messages`);
+        
+        // Convert timestamp strings back to Date objects
+        const processedMessages = newAiMessages.map(msg => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp)
+        }));
+
+        setMessages(prev => [...prev, ...processedMessages]);
+        setIsLoading(false); // Stop loading when AI responds
+        lastPollTimeRef.current = new Date(); // Update last poll time
+      }
+    } catch (error) {
+      console.error('❌ Error polling for AI messages:', error);
+    }
+  };
+
+  // Set up polling interval
+  useEffect(() => {
+    const pollingInterval = setInterval(pollForAiMessages, 3000); // Poll every 3 seconds
+    
+    return () => clearInterval(pollingInterval);
+  }, []); // Empty dependency array - we want this to run once
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
   const handleSendMessage = async () => {
     if (!inputText.trim()) return;
 
+    const userMessageText = inputText;
     const userMessage: Message = {
-      id: Date.now().toString(),
-      text: inputText,
+      id: uuidv4(),
+      text: userMessageText,
       sender: 'user',
-      timestamp: new Date()
+      timestamp: new Date(),
+      sessionId: sessionIdRef.current
     };
 
     // Add user message immediately
     setMessages(prev => [...prev, userMessage]);
     setInputText('');
-    setIsLoading(true);
+    setIsLoading(true); // Start loading indicator
 
     try {
-      // Send to Make.com (no immediate AI response)
-      await sendToMake(inputText);
-      
-      // Keep loading state - AI will respond via separate endpoint
-      
+      await sendUserMessageToMake(userMessageText);
+      // Keep loading state - AI response will come via polling
     } catch (error) {
-      // Add error message and stop loading
       const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: "Sorry, there was an error connecting to the quote engine. Please try again.",
+        id: uuidv4(),
+        text: "Sorry, there was an error sending your message. Please try again.",
         sender: 'ai',
-        timestamp: new Date()
+        timestamp: new Date(),
+        sessionId: sessionIdRef.current
       };
       setMessages(prev => [...prev, errorMessage]);
-      setIsLoading(false);
+      setIsLoading(false); // Stop loading if sending fails
     }
   };
 
@@ -146,6 +195,9 @@ const Quotes = () => {
                 </div>
               </div>
             )}
+            
+            {/* Auto-scroll anchor */}
+            <div ref={messagesEndRef} />
           </div>
 
           {/* Input Area */}
@@ -169,7 +221,7 @@ const Quotes = () => {
               </button>
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-              Connected to Make.com AI Quote Engine | Tech ID: 22222222-2222-2222-2222-222222222222
+              Connected to AI Quote Engine | Session: {sessionIdRef.current.slice(-8)} | Tech ID: 22222222-2222-2222-2222-222222222222
             </p>
           </div>
         </div>
