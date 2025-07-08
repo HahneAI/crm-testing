@@ -63,6 +63,9 @@ const Quotes = () => {
 
   // Poll for new AI messages
 const pollForAiMessages = async () => {
+  console.log('🔍 POLLING - Session:', sessionIdRef.current);
+  console.log('🔍 POLLING - URL:', LOCAL_API_URL);
+  
   try {
     const response = await fetch(LOCAL_API_URL);
     
@@ -71,9 +74,10 @@ const pollForAiMessages = async () => {
     }
 
     const newAiMessages = await response.json();
+    console.log('🔍 RECEIVED DATA:', newAiMessages);
     
     if (newAiMessages.length > 0) {
-      console.log('Received new AI messages:', newAiMessages.length);
+      console.log('✅ ADDING MESSAGES TO CHAT:', newAiMessages.length);
       
       const processedMessages = newAiMessages.map(msg => ({
         ...msg,
