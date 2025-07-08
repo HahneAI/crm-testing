@@ -20,7 +20,7 @@ const Quotes = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: "Hello! I'm your AI Quote Engine assistant. I can help you create accurate quotes for landscaping jobs. What project would you like to quote today?",
+      text: "Let's make some profit. What are we doing today?",
       sender: 'ai',
       timestamp: new Date(),
       sessionId: sessionIdRef.current
