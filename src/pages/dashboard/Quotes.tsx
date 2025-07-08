@@ -62,33 +62,32 @@ const Quotes = () => {
   };
 
   // Poll for new AI messages
-  const pollForAiMessages = async () => {
-    try {
-      const response = await fetch(`${LOCAL_API_URL};
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch AI messages');
-      }
-
-      const newAiMessages: Message[] = await response.json();
-      
-      if (newAiMessages.length > 0) {
-        console.log(`📨 Received ${newAiMessages.length} new AI messages`);
-        
-        // Convert timestamp strings back to Date objects
-        const processedMessages = newAiMessages.map(msg => ({
-          ...msg,
-          timestamp: new Date(msg.timestamp)
-        }));
-
-        setMessages(prev => [...prev, ...processedMessages]);
-        setIsLoading(false); // Stop loading when AI responds
-        lastPollTimeRef.current = new Date(); // Update last poll time
-      }
-    } catch (error) {
-      console.error('❌ Error polling for AI messages:', error);
+const pollForAiMessages = async () => {
+  try {
+    const response = await fetch(LOCAL_API_URL);
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch AI messages');
     }
-  };
+
+    const newAiMessages = await response.json();
+    
+    if (newAiMessages.length > 0) {
+      console.log('Received new AI messages:', newAiMessages.length);
+      
+      const processedMessages = newAiMessages.map(msg => ({
+        ...msg,
+        timestamp: new Date(msg.timestamp)
+      }));
+
+      setMessages(prev => [...prev, ...processedMessages]);
+      setIsLoading(false);
+      lastPollTimeRef.current = new Date();
+    }
+  } catch (error) {
+    console.error('Error polling for AI messages:', error);
+  }
+};
 
   // Set up polling interval
   useEffect(() => {
