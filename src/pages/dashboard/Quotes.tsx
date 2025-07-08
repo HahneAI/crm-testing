@@ -67,7 +67,7 @@ const pollForAiMessages = async () => {
   console.log('🔍 POLLING - URL:', LOCAL_API_URL);
   
   try {
-    const response = await fetch(LOCAL_API_URL);
+    const response = await fetch(`${LOCAL_API_URL}?since=${lastPollTimeRef.current.toISOString()}`);
     
     if (!response.ok) {
       throw new Error('Failed to fetch AI messages');
