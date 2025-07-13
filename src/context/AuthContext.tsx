@@ -3,19 +3,6 @@ import { User, Session, AuthError } from '@supabase/supabase-js';
 import { getSupabase } from '../services/supabase';
 import { UserProfile } from '../types/user';
 
-// Updated mock user profile to match new schema
-const mockUserProfile: UserProfile = {
-  id: 'user-1',
-  email: 'admin@example.com',
-  full_name: 'Admin User',
-  role: 'admin',
-  company_id: 'company-1',
-  phone: '555-123-4567',
-  is_active: true,
-  created_at: '2023-06-01T00:00:00Z',
-  updated_at: '2023-06-01T00:00:00Z'
-};
-
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -36,50 +23,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   
-  // Prevent multiple concurrent auth checks
   const authCheckInProgress = useRef(false);
   const initialized = useRef(false);
 
-  // Always use mock authentication - no Supabase required
-  const supabaseConfigured = useMemo(() => false, []);
+  const supabase = getSupabase();
+  const supabaseConfigured = useMemo(() => !!supabase, [supabase]);
 
   const fetchUserProfile = async (userId: string) => {
     try {
-      // Always use mock data
-      setUserProfile(mockUserProfile);
-      setIsAdmin(mockUserProfile.role === 'admin');
-      return;
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setUserProfile(data as UserProfile);
+        setIsAdmin(data.role === 'admin');
+      }
     } catch (error) {
-      // Final fallback to mock data on any error
-      setUserProfile(mockUserProfile);
-      setIsAdmin(true);
+      console.error('Error fetching user profile:', error);
     }
   };
 
   useEffect(() => {
-    // Prevent multiple initialization attempts
-    if (initialized.current) return;
+    if (initialized.current || !supabaseConfigured) return;
     initialized.current = true;
 
     const initializeAuth = async () => {
-      // Prevent multiple concurrent auth checks
       if (authCheckInProgress.current) return;
       authCheckInProgress.current = true;
 
       try {
-        // Always use mock auth - instant login
-        setUser({ id: mockUserProfile.id } as User);
-        setUserProfile(mockUserProfile);
-        setIsAdmin(mockUserProfile.role === 'admin');
-        setLoading(false);
-        authCheckInProgress.current = false;
-        
+        const { data: { session } } = await supabase.auth.getSession();
+        setSession(session);
+        setUser(session?.user ?? null);
+
+        if (session?.user) {
+          await fetchUserProfile(session.user.id);
+        }
       } catch (error) {
         console.error('Error initializing auth:', error);
-        // Fall back to mock data on any error
-        setUser({ id: mockUserProfile.id } as User);
-        setUserProfile(mockUserProfile);
-        setIsAdmin(mockUserProfile.role === 'admin');
       } finally {
         setLoading(false);
         authCheckInProgress.current = false;
@@ -87,28 +73,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     initializeAuth();
-  }, [supabaseConfigured]);
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        if (event === 'SIGNED_IN' && session?.user) {
+          await fetchUserProfile(session.user.id);
+        } else if (event === 'SIGNED_OUT') {
+          setUserProfile(null);
+          setIsAdmin(false);
+        }
+      }
+    );
+
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
+  }, [supabase, supabaseConfigured]);
 
   const signIn = async (email: string, password: string) => {
-    // Always use mock sign in
-    setUser({ id: mockUserProfile.id } as User);
-    setUserProfile(mockUserProfile);
-    setIsAdmin(mockUserProfile.role === 'admin');
-    return { error: null };
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    return { error };
   };
 
-  const signUp = async (email: string, password: string, full_name: string) => {
-    // Always use mock sign up
-    setUser({ id: mockUserProfile.id } as User);
-    setUserProfile(mockUserProfile);
-    setIsAdmin(mockUserProfile.role === 'admin');
-    return { error: null, data: { user: mockUserProfile } };
+  const signUp = async (email:string, password: string, full_name: string) => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name,
+        },
+      },
+    });
+    return { data, error };
   };
 
   const signOut = async () => {
-    // Mock sign out - but keep user logged in for no-auth mode
-    // Don't actually sign out to maintain access
-    return;
+    await supabase.auth.signOut();
   };
 
   const value = {
