@@ -30,23 +30,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const supabaseConfigured = useMemo(() => !!supabase, [supabase]);
 
   const fetchUserProfile = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
+  try {
+    // Try new method first (auth_user_id) 
+    let { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('auth_user_id', userId)
+      .single();
+      
+    // Fallback to old method if new method fails (for transition period)
+    if (error || !data) {
+      console.log('Trying fallback method for user lookup...');
+      ({ data, error } = await supabase
         .from('users')
         .select('*')
         .eq('id', userId)
-        .single();
-
-      if (error) throw error;
-
-      if (data) {
-        setUserProfile(data as UserProfile);
-        setIsAdmin(data.role === 'admin');
-      }
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
+        .single());
     }
-  };
+    
+    if (error) {
+      console.error('User profile lookup failed:', error);
+      return;
+    }
+    
+    if (data) {
+      setUserProfile(data as UserProfile);
+      setIsAdmin(data.role === 'admin');
+      console.log('User profile loaded:', data.email, data.role);
+    }
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+  }
+};
 
   useEffect(() => {
     if (initialized.current || !supabaseConfigured) return;
