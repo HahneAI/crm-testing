@@ -30,6 +30,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const supabaseConfigured = useMemo(() => !!supabase, [supabase]);
 
   const fetchUserProfile = async (userId: string) => {
+  console.log('🔍 Looking for user profile with auth ID:', userId);
+  
   try {
     // Try new method first (auth_user_id) 
     let { data, error } = await supabase
@@ -38,19 +40,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .eq('auth_user_id', userId)
       .single();
       
+    console.log('🔍 auth_user_id lookup result:', { data, error });
+      
     // Fallback to old method if new method fails (for transition period)
     if (error || !data) {
-      console.log('Trying fallback method for user lookup...');
+      console.log('🔍 Trying fallback method for user lookup...');
       ({ data, error } = await supabase
         .from('users')
         .select('*')
         .eq('id', userId)
         .single());
+        
+      console.log('🔍 id lookup result:', { data, error });
     }
     
     if (error) {
       console.error('User profile lookup failed, but continuing...:', error);
-      // Don't throw - just set defaults to prevent infinite loops
       setUserProfile(null);
       setIsAdmin(false);
       return;
@@ -59,11 +64,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (data) {
       setUserProfile(data as UserProfile);
       setIsAdmin(data.role === 'admin');
-      console.log('User profile loaded:', data.email, data.role);
+      console.log('✅ User profile loaded:', data.email, data.role);
     }
   } catch (error) {
     console.error('Error fetching user profile:', error);
-    // Prevent infinite loops by setting safe defaults
     setUserProfile(null);
     setIsAdmin(false);
   }
