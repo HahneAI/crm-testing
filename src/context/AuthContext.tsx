@@ -74,30 +74,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 };
 
   useEffect(() => {
-    if (initialized.current || !supabaseConfigured) return;
-    initialized.current = true;
-
-    const initializeAuth = async () => {
-      if (authCheckInProgress.current) return;
-      authCheckInProgress.current = true;
-
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        setSession(session);
-        setUser(session?.user ?? null);
-
-        if (session?.user) {
-          await fetchUserProfile(session.user.id);
-        }
-      } catch (error) {
-        console.error('Error initializing auth:', error);
-      } finally {
-        setLoading(false);
-        authCheckInProgress.current = false;
+  console.log('🚀 Auth useEffect running, supabaseConfigured:', supabaseConfigured);
+  
+  if (initialized.current || !supabaseConfigured) {
+    console.log('⚠️ Auth useEffect skipped - initialized:', initialized.current, 'configured:', supabaseConfigured);
+    return;
+  }
+  
+  initialized.current = true;
+  
+  const initializeAuth = async () => {
+    console.log('🔍 Initializing auth...');
+    
+    if (authCheckInProgress.current) {
+      console.log('⚠️ Auth check already in progress');
+      return;
+    }
+    
+    authCheckInProgress.current = true;
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log('📋 Got session:', session?.user?.id || 'No session');
+      
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        console.log('👤 User found, fetching profile for:', session.user.id);
+        await fetchUserProfile(session.user.id);
+      } else {
+        console.log('❌ No user in session');
       }
-    };
+    } catch (error) {
+      console.error('💥 Error initializing auth:', error);
+    } finally {
+      console.log('✅ Auth initialization complete');
+      setLoading(false);
+      authCheckInProgress.current = false;
+    }
+  };
 
-    initializeAuth();
+  initializeAuth();
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
