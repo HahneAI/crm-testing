@@ -49,7 +49,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     
     if (error) {
-      console.error('User profile lookup failed:', error);
+      console.error('User profile lookup failed, but continuing...:', error);
+      // Don't throw - just set defaults to prevent infinite loops
+      setUserProfile(null);
+      setIsAdmin(false);
       return;
     }
     
@@ -60,6 +63,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   } catch (error) {
     console.error('Error fetching user profile:', error);
+    // Prevent infinite loops by setting safe defaults
+    setUserProfile(null);
+    setIsAdmin(false);
   }
 };
 
