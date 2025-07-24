@@ -33,8 +33,8 @@ function App() {
   return (
     <Routes>
       {/* Auth Routes - Always redirect to dashboard */}
-      {/* <Route path="/login" element={<Navigate to="/dashboard" replace />} /> */}
-{/* <Route path="/register" element={<Navigate to="/dashboard" replace />} /> */}
+      {/* <Route path="/login" element={<Navigate to="/dashboard" replace />} />*/}
+      {/* <Route path="/register" element={<Navigate to="/dashboard" replace />} /> */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       
