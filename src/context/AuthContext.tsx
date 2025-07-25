@@ -95,17 +95,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      console.log('📋 Got session:', session?.user?.id || 'No session');
-      
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        console.log('👤 User found, fetching profile for:', session.user.id);
-        await fetchUserProfile(session.user.id);
-      } else {
-        console.log('❌ No user in session');
-      }
+console.log('📋 Got session:', session?.user?.id || 'No session');
+
+// AUTO-LOGIN FOR DEVELOPMENT
+if (!session) {
+  console.log('🔧 DEV MODE: Auto-logging in test user');
+  const { error } = await supabase.auth.signInWithPassword({
+    email: 'tech@demo.com',
+    password: 'test'
+  });
+  
+  if (!error) {
+    console.log('✅ Auto-login successful - auth state change will handle the rest');
+    return; // Let the auth state change handler take over
+  } else {
+    console.error('❌ Auto-login failed:', error);
+  }
+}
+
+setSession(session);
+setUser(session?.user ?? null);
+
+if (session?.user) {
+  console.log('👤 User found, fetching profile for:', session.user.id);
+  await fetchUserProfile(session.user.id);
+} else {
+  console.log('❌ No user in session');
+}
     } catch (error) {
       console.error('💥 Error initializing auth:', error);
     } finally {
