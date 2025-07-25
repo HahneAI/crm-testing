@@ -9,6 +9,7 @@ import LaborHoursChart from '../../components/dashboard/LaborHoursChart';
 import LoadingScreen from '../../components/common/LoadingScreen';
 import { useAuth } from '../../context/AuthContext';
 import { getJobStatusCounts, fetchJobs, getLaborStatistics } from '../../services/mockData';
+import SystemHealthMonitor from '../../components/monitoring/SystemHealthMonitor';
 
 const Dashboard = () => {
   const { userProfile } = useAuth();
@@ -134,6 +135,11 @@ const Dashboard = () => {
         {/* Recent Jobs */}
         <div>
           <RecentJobsList jobs={recentJobs} />
+        </div>
+
+        {/* System Health Monitor */}
+        <div className="mt-6">
+          <SystemHealthMonitor />
         </div>
       </div>
     </DashboardLayout>
