@@ -98,9 +98,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 console.log('📋 Got session:', session?.user?.id || 'No session');
 
 // AUTO-LOGIN FOR DEVELOPMENT
-  /* if (!session) {
+  if (!session) {
   console.log('🔧 DEV MODE: Auto-logging in test user');
-  const { error } = await supabase.auth.signInWithPassword({
+  /* const { error } = await supabase.auth.signInWithPassword({
     email: 'tech@demo.com',
     password: 'test'
   });
