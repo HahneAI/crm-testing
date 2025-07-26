@@ -37,6 +37,9 @@ export default defineConfig({
           },
         ],
       },
+      devOptions: {
+        enabled: true
+      }
     }),
   ],
   optimizeDeps: {
