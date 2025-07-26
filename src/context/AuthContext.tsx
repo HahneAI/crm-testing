@@ -3,19 +3,6 @@ import { User, Session, AuthError } from '@supabase/supabase-js';
 import { getSupabase } from '../services/supabase';
 import { UserProfile } from '../types/user';
 
-// Updated mock user profile to match new schema
-const mockUserProfile: UserProfile = {
-  id: 'user-1',
-  email: 'admin@example.com',
-  full_name: 'Admin User',
-  role: 'admin',
-  company_id: 'company-1',
-  phone: '555-123-4567',
-  is_active: true,
-  created_at: '2023-06-01T00:00:00Z',
-  updated_at: '2023-06-01T00:00:00Z'
-};
-
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -36,79 +23,154 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   
-  // Prevent multiple concurrent auth checks
   const authCheckInProgress = useRef(false);
   const initialized = useRef(false);
 
-  // Always use mock authentication - no Supabase required
-  const supabaseConfigured = useMemo(() => false, []);
+  const supabase = getSupabase();
+  const supabaseConfigured = useMemo(() => !!supabase, [supabase]);
 
   const fetchUserProfile = async (userId: string) => {
-    try {
-      // Always use mock data
-      setUserProfile(mockUserProfile);
-      setIsAdmin(mockUserProfile.role === 'admin');
+  console.log('🔍 Looking for user profile with auth ID:', userId);
+  
+  try {
+    // Try new method first (auth_user_id) 
+    let { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('auth_user_id', userId)
+      .single();
+      
+    console.log('🔍 auth_user_id lookup result:', { data, error });
+      
+    // Fallback to old method if new method fails (for transition period)
+    if (error || !data) {
+      console.log('🔍 Trying fallback method for user lookup...');
+      ({ data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single());
+        
+      console.log('🔍 id lookup result:', { data, error });
+    }
+    
+    if (error) {
+      console.error('User profile lookup failed, but continuing...:', error);
+      setUserProfile(null);
+      setIsAdmin(false);
       return;
+    }
+    
+    if (data) {
+      setUserProfile(data as UserProfile);
+      setIsAdmin(data.role === 'admin');
+      console.log('✅ User profile loaded:', data.email, data.role);
+    }
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    setUserProfile(null);
+    setIsAdmin(false);
+  }
+};
+
+  useEffect(() => {
+  console.log('🚀 Auth useEffect running, supabaseConfigured:', supabaseConfigured);
+  
+  if (initialized.current || !supabaseConfigured) {
+    console.log('⚠️ Auth useEffect skipped - initialized:', initialized.current, 'configured:', supabaseConfigured);
+    return;
+  }
+  
+  initialized.current = true;
+  
+  const initializeAuth = async () => {
+    console.log('🔍 Initializing auth...');
+    
+    if (authCheckInProgress.current) {
+      console.log('⚠️ Auth check already in progress');
+      return;
+    }
+    
+    authCheckInProgress.current = true;
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+console.log('📋 Got session:', session?.user?.id || 'No session');
+
+// AUTO-LOGIN FOR DEVELOPMENT
+  if (!session) {
+  console.log('🔧 DEV MODE: Auto-logging in test user');
+  const { error } = await supabase.auth.signInWithPassword({
+    email: 'tech1@demo.com',
+    password: 'test'
+  });
+  
+  if (!error) {
+    console.log('✅ Auto-login successful - auth state change will handle the rest');
+    return; // Let the auth state change handler take over
+  } else {
+    console.error('❌ Auto-login failed:', error);
+  }
+}
+
+setSession(session);
+setUser(session?.user ?? null);
+
+if (session?.user) {
+  console.log('👤 User found, fetching profile for:', session.user.id);
+  await fetchUserProfile(session.user.id);
+} else {
+  console.log('❌ No user in session');
+}
     } catch (error) {
-      // Final fallback to mock data on any error
-      setUserProfile(mockUserProfile);
-      setIsAdmin(true);
+      console.error('💥 Error initializing auth:', error);
+    } finally {
+      console.log('✅ Auth initialization complete');
+      setLoading(false);
+      authCheckInProgress.current = false;
     }
   };
 
-  useEffect(() => {
-    // Prevent multiple initialization attempts
-    if (initialized.current) return;
-    initialized.current = true;
+  initializeAuth();
 
-    const initializeAuth = async () => {
-      // Prevent multiple concurrent auth checks
-      if (authCheckInProgress.current) return;
-      authCheckInProgress.current = true;
-
-      try {
-        // Always use mock auth - instant login
-        setUser({ id: mockUserProfile.id } as User);
-        setUserProfile(mockUserProfile);
-        setIsAdmin(mockUserProfile.role === 'admin');
-        setLoading(false);
-        authCheckInProgress.current = false;
-        
-      } catch (error) {
-        console.error('Error initializing auth:', error);
-        // Fall back to mock data on any error
-        setUser({ id: mockUserProfile.id } as User);
-        setUserProfile(mockUserProfile);
-        setIsAdmin(mockUserProfile.role === 'admin');
-      } finally {
-        setLoading(false);
-        authCheckInProgress.current = false;
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        if (event === 'SIGNED_IN' && session?.user) {
+          await fetchUserProfile(session.user.id);
+        } else if (event === 'SIGNED_OUT') {
+          setUserProfile(null);
+          setIsAdmin(false);
+        }
       }
-    };
+    );
 
-    initializeAuth();
-  }, [supabaseConfigured]);
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
+  }, [supabase, supabaseConfigured]);
 
   const signIn = async (email: string, password: string) => {
-    // Always use mock sign in
-    setUser({ id: mockUserProfile.id } as User);
-    setUserProfile(mockUserProfile);
-    setIsAdmin(mockUserProfile.role === 'admin');
-    return { error: null };
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    return { error };
   };
 
-  const signUp = async (email: string, password: string, full_name: string) => {
-    // Always use mock sign up
-    setUser({ id: mockUserProfile.id } as User);
-    setUserProfile(mockUserProfile);
-    setIsAdmin(mockUserProfile.role === 'admin');
-    return { error: null, data: { user: mockUserProfile } };
+  const signUp = async (email:string, password: string, full_name: string) => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name,
+        },
+      },
+    });
+    return { data, error };
   };
 
   const signOut = async () => {
-    // Mock sign out - but keep user logged in for no-auth mode
-    // Don't actually sign out to maintain access
-    return;
+    await supabase.auth.signOut();
   };
 
   const value = {
