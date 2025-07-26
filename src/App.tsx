@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
+import Login from './pages/auth/Login.tsx';           // ← ADD THIS
+import Register from './pages/auth/Register.tsx';     // ← ADD THIS
 import Dashboard from './pages/dashboard/Dashboard.tsx';
 import Jobs from './pages/dashboard/Jobs.tsx';
 import Labor from './pages/dashboard/Labor.tsx';
