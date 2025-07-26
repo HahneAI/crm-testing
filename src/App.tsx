@@ -30,9 +30,11 @@ function App() {
   
   return (
     <Routes>
-      <Route path="/login" element={<Navigate to="/dashboard" replace />} />
-      <Route path="/register" element={<Navigate to="/dashboard" replace />} />
-      
+      {/* Auth Routes - Always redirect to dashboard */}
+      {/* <Route path="/login" element={<Navigate to="/dashboard" replace />} />*/}
+      {/* <Route path="/register" element={<Navigate to="/dashboard" replace />} /> */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/jobs" element={<ProtectedRoute><Jobs /></ProtectedRoute>} />
       <Route path="/quotes" element={<ProtectedRoute><Quotes /></ProtectedRoute>} />
