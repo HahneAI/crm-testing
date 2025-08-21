@@ -7,7 +7,7 @@ import {
     getCoreConfig,
     getTerminologyConfig,
     getSmartVisualThemeConfig,
-} from '../config/industry';
+} from '../../config/industry';
 import { triggerSendEffect } from './ui/IndustryEffects';
 import TypingIndicator from './ui/TypingIndicator';
 import { ThemeAwareMessageBubble } from './ui/ThemeAwareMessageBubble';
