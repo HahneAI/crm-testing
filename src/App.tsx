@@ -16,6 +16,7 @@ import MobileJobView from './pages/mobile/JobView.tsx';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import AdminRoute from './components/auth/AdminRoute';
 import LoadingScreen from './components/common/LoadingScreen';
+import PricingTool from './pages/dashboard/PricingTool';
 import Quotes from './pages/dashboard/Quotes';
 import MobileDashboard from './pages/mobile/MobileDashboard.tsx';
 
@@ -40,6 +41,7 @@ function App() {
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/jobs" element={<ProtectedRoute><Jobs /></ProtectedRoute>} />
       <Route path="/quotes" element={<ProtectedRoute><Quotes /></ProtectedRoute>} />
+      <Route path="/pricing" element={<ProtectedRoute><PricingTool /></ProtectedRoute>} />
       <Route path="/labor" element={<ProtectedRoute><Labor /></ProtectedRoute>} />
       <Route path="/materials" element={<ProtectedRoute><Materials /></ProtectedRoute>} />
       

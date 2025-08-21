@@ -12,6 +12,7 @@ import {
   LogOut, 
   Menu, 
   X,
+  DollarSign,
   AlertCircle
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -45,7 +46,8 @@ const Sidebar = () => {
 const menuItems = [
   { path: '/dashboard', name: 'Dashboard', icon: <LayoutDashboard size={20} /> },
   { path: '/jobs', name: 'Jobs', icon: <Briefcase size={20} /> },
-  { path: '/quotes', name: 'Quote Engine', icon: <Calculator size={20} /> }, // NEW
+  { path: '/quotes', name: 'Quote Engine', icon: <Calculator size={20} /> },
+  { path: '/pricing', name: 'AI Pricing', icon: <DollarSign size={20} /> }, // ADD THIS LINE
   { path: '/labor', name: 'Labor Hours', icon: <Clock size={20} /> },
   { path: '/materials', name: 'Materials', icon: <Package size={20} /> },
   { path: '/employees', name: 'Employees', icon: <Users size={20} />, adminOnly: true },
