@@ -359,7 +359,7 @@ const PricingTool = () => {
         </div>
       </main>
     </div>
-    </DashboardLayout>  {/* ADD THIS LINE */} );
+    </DashboardLayout>  );
 };
 
 export default PricingTool;
