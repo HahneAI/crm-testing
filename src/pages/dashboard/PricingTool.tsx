@@ -8,10 +8,10 @@ import {
     getTerminologyConfig,
     getSmartVisualThemeConfig,
 } from '../../config/industry';
-import { triggerSendEffect } from './ui/IndustryEffects';
-import TypingIndicator from './ui/TypingIndicator';
-import { ThemeAwareMessageBubble } from './ui/ThemeAwareMessageBubble';
-import { ThemeAwareAvatar } from './ui/ThemeAwareAvatar';
+import { triggerSendEffect } from "../../components/ui/IndustryEffects";
+import TypingIndicator from "../../components/ui/TypingIndicator";
+import { ThemeAwareMessageBubble } from "../../components/ui/ThemeAwareMessageBubble";
+import { ThemeAwareAvatar } from '../../components/ui/ThemeAwareAvatar';
 import { Message } from '../types/job';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 
